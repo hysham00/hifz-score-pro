@@ -5,29 +5,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const Login = () => {
+const Register = () => {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"admin" | "judge">("judge");
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (password.length < 6) {
+      toast({ title: "Password too short", description: "Password must be at least 6 characters", variant: "destructive" });
+      return;
+    }
     setIsLoading(true);
     try {
-      await signIn(email, password);
-      navigate("/dashboard");
+      await signUp(email, password, fullName, role);
+      toast({ title: "Account created!", description: "You can now sign in with your credentials." });
+      navigate("/");
     } catch (error: any) {
-      toast({
-        title: "Login failed",
-        description: error.message || "Invalid email or password",
-        variant: "destructive",
-      });
+      toast({ title: "Registration failed", description: error.message || "Something went wrong", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -46,17 +50,27 @@ const Login = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="font-heading text-xl">Sign In</CardTitle>
-            <CardDescription>Enter your credentials to access the system</CardDescription>
+            <CardTitle className="font-heading text-xl">Create Account</CardTitle>
+            <CardDescription>Register as an admin or judge</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  placeholder="Enter your full name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@musabaqa.com"
+                  placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -73,14 +87,26 @@ const Login = () => {
                   required
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="role">Role</Label>
+                <Select value={role} onValueChange={(v) => setRole(v as "admin" | "judge")}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select your role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="judge">Judge</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign In"}
+                {isLoading ? "Creating account..." : "Create Account"}
               </Button>
             </form>
             <p className="mt-4 text-center text-sm text-muted-foreground">
-              Don't have an account?{" "}
-              <Link to="/register" className="text-primary hover:underline font-medium">
-                Register
+              Already have an account?{" "}
+              <Link to="/" className="text-primary hover:underline font-medium">
+                Sign In
               </Link>
             </p>
           </CardContent>
@@ -90,4 +116,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;
