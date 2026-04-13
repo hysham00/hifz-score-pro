@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Categories from "./pages/Categories";
 import Participants from "./pages/Participants";
@@ -51,6 +52,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/" element={<AuthRedirect />} />
+            <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/dashboard/categories" element={<ProtectedRoute allowedRoles={["admin"]}><Categories /></ProtectedRoute>} />
             <Route path="/dashboard/participants" element={<ProtectedRoute allowedRoles={["admin"]}><Participants /></ProtectedRoute>} />
