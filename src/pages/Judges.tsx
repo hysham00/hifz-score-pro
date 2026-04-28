@@ -16,15 +16,41 @@ const Judges = () => {
   const { toast } = useToast();
   const qc = useQueryClient();
 
-  const { data: judges, isLoading } = useQuery({
+  const { data: judges, isLoading, error } = useQuery({
     queryKey: ["judges"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get user_ids with judge role
+      const { data: roleData, error: roleError } = await supabase
         .from("user_roles")
-        .select("user_id, profiles(full_name, user_id)")
+        .select("user_id, role")
         .eq("role", "judge");
-      if (error) throw error;
-      return data;
+      
+      if (roleError) {
+        console.error("Role query error:", roleError);
+        throw roleError;
+      }
+      
+      if (!roleData || roleData.length === 0) {
+        return [];
+      }
+      
+      // Then get profile details for each user
+      const userIds = roleData.map(r => r.user_id);
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", userIds);
+      
+      if (profileError) {
+        console.error("Profile query error:", profileError);
+        throw profileError;
+      }
+      
+      // Combine the data
+      return roleData.map(r => ({
+        user_id: r.user_id,
+        profiles: profileData?.find(p => p.user_id === r.user_id) || null
+      }));
     },
   });
 
@@ -39,11 +65,17 @@ const Judges = () => {
       if (authError) throw authError;
       if (!authData.user) throw new Error("Failed to create user");
 
+      // Wait a bit for the trigger to create the profile
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       // Assign judge role
       const { error: roleError } = await supabase
         .from("user_roles")
-        .insert({ user_id: authData.user.id, role: "judge" as any });
-      if (roleError) throw roleError;
+        .insert({ user_id: authData.user.id, role: "judge" });
+      if (roleError) {
+        console.error("Role insert error:", roleError);
+        throw roleError;
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["judges"] });
@@ -102,6 +134,8 @@ const Judges = () => {
             <TableBody>
               {isLoading ? (
                 <TableRow><TableCell colSpan={2} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+              ) : error ? (
+                <TableRow><TableCell colSpan={2} className="text-center py-8 text-red-500">Error loading judges: {error.message}</TableCell></TableRow>
               ) : judges?.length === 0 ? (
                 <TableRow><TableCell colSpan={2} className="text-center py-8 text-muted-foreground">No judges yet</TableCell></TableRow>
               ) : judges?.map((j: any) => (
