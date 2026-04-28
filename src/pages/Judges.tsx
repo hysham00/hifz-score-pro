@@ -16,7 +16,7 @@ const Judges = () => {
   const { toast } = useToast();
   const qc = useQueryClient();
 
-  const { data: judges, isLoading, error } = useQuery({
+  const { data: judges, isLoading, error, refetch } = useQuery({
     queryKey: ["judges"],
     queryFn: async () => {
       // First get user_ids with judge role
@@ -24,6 +24,9 @@ const Judges = () => {
         .from("user_roles")
         .select("user_id, role")
         .eq("role", "judge");
+      
+      console.log("Role data:", roleData);
+      console.log("Role error:", roleError);
       
       if (roleError) {
         console.error("Role query error:", roleError);
@@ -36,14 +39,26 @@ const Judges = () => {
       
       // Then get profile details for each user
       const userIds = roleData.map(r => r.user_id);
+      
+      if (userIds.length === 0) {
+        return [];
+      }
+      
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("user_id, full_name")
         .in("user_id", userIds);
       
+      console.log("Profile data:", profileData);
+      console.log("Profile error:", profileError);
+      
       if (profileError) {
         console.error("Profile query error:", profileError);
-        throw profileError;
+        // Don't throw, just return with empty profiles
+        return roleData.map(r => ({
+          user_id: r.user_id,
+          profiles: null
+        }));
       }
       
       // Combine the data
@@ -93,7 +108,11 @@ const Judges = () => {
           <h1 className="font-heading text-2xl font-bold">Judges</h1>
           <p className="text-muted-foreground">Manage competition judges</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            Refresh
+          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button><Plus className="mr-2 h-4 w-4" />Add Judge</Button>
           </DialogTrigger>
@@ -135,10 +154,15 @@ const Judges = () => {
               {isLoading ? (
                 <TableRow><TableCell colSpan={2} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
               ) : error ? (
-                <TableRow><TableCell colSpan={2} className="text-center py-8 text-red-500">Error loading judges: {error.message}</TableCell></TableRow>
-              ) : judges?.length === 0 ? (
-                <TableRow><TableCell colSpan={2} className="text-center py-8 text-muted-foreground">No judges yet</TableCell></TableRow>
-              ) : judges?.map((j: any) => (
+                <TableRow>
+                  <TableCell colSpan={2} className="text-center py-8">
+                    <div className="text-red-500 mb-2">Error: {error.message}</div>
+                    <Button variant="outline" size="sm" onClick={() => refetch()}>Retry</Button>
+                  </TableCell>
+                </TableRow>
+              ) : !judges || judges.length === 0 ? (
+                <TableRow><TableCell colSpan={2} className="text-center py-8 text-muted-foreground">No judges yet. Click "Add Judge" to create one.</TableCell></TableRow>
+              ) : judges.map((j: any) => (
                 <TableRow key={j.user_id}>
                   <TableCell className="font-medium">{j.profiles?.full_name || "—"}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">{j.user_id}</TableCell>
