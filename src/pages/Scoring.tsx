@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,6 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Award, Minus } from "lucide-react";
+
+const clamp = (n: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, isNaN(n) ? 0 : n));
 
 function calculateMemorizationScore(maxMarks: number, deduction: number): number {
   return Math.max(0, maxMarks - deduction);
