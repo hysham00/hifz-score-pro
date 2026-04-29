@@ -1,18 +1,12 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-// Hardcoded coordinator account. Created automatically on first load.
-const ADMIN_EMAIL = "admin@musabaqa.com";
-const ADMIN_PASSWORD = "Admin@12345";
-const ADMIN_NAME = "Coordinator";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -21,33 +15,6 @@ const Login = () => {
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const bootstrapped = useRef(false);
-
-  // Try to bootstrap the admin account once. Safe if it already exists.
-  useEffect(() => {
-    if (bootstrapped.current) return;
-    bootstrapped.current = true;
-    (async () => {
-      try {
-        const { data, error } = await supabase.auth.signUp({
-          email: ADMIN_EMAIL,
-          password: ADMIN_PASSWORD,
-          options: { data: { full_name: ADMIN_NAME } },
-        });
-        if (error) return; // Likely already exists
-        if (data.user) {
-          await supabase.from("user_roles").insert({
-            user_id: data.user.id,
-            role: "admin",
-          });
-          // Sign out the auto-created session so the user logs in manually
-          await supabase.auth.signOut();
-        }
-      } catch {
-        /* noop */
-      }
-    })();
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +25,7 @@ const Login = () => {
     } catch (error: any) {
       toast({
         title: "Login failed",
-        description: error.message || "Invalid email or password",
+        description: error?.message || "Invalid email or password",
         variant: "destructive",
       });
     } finally {
@@ -93,6 +60,7 @@ const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  autoComplete="email"
                 />
               </div>
               <div className="space-y-2">
@@ -104,6 +72,7 @@ const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  autoComplete="current-password"
                 />
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
