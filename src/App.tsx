@@ -37,7 +37,13 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
 
 function AuthRedirect() {
   const { user, loading } = useAuth();
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="font-heading text-lg text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
   if (user) return <Navigate to="/dashboard" replace />;
   return <Login />;
 }
