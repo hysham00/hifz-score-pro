@@ -21,7 +21,8 @@ const Scoring = () => {
   const qc = useQueryClient();
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedParticipant, setSelectedParticipant] = useState<string>("");
-  const [mistakes, setMistakes] = useState(0);
+  const [tadCount, setTadCount] = useState(0);
+  const [tilCount, setTilCount] = useState(0);
   const [tajweed, setTajweed] = useState(0);
   const [voice, setVoice] = useState(0);
   const [dressing, setDressing] = useState(0);
