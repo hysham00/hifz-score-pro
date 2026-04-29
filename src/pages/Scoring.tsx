@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,9 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Award, Minus } from "lucide-react";
 
-function calculateMemorizationScore(maxMarks: number, deduction: number): number {
-  return Math.max(0, maxMarks - deduction);
-}
+const clamp = (n: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, isNaN(n) ? 0 : n));
 
 const Scoring = () => {
   const { user } = useAuth();
@@ -60,12 +59,31 @@ const Scoring = () => {
     enabled: !!selectedParticipant && !!user,
   });
 
+  // Load existing score values when a participant is selected / score loads
+  useEffect(() => {
+    if (existingScore) {
+      const mistakes = existingScore.memorization_mistakes ?? 0;
+      // Best-effort split: prefer keeping all as TAD (smaller deductions); judge can adjust
+      setTadCount(mistakes);
+      setTilCount(0);
+      setTajweed(Number(existingScore.tajweed_score) || 0);
+      setVoice(Number(existingScore.voice_score) || 0);
+      setDressing(Number(existingScore.dressing_score) || 0);
+    } else {
+      setTadCount(0);
+      setTilCount(0);
+      setTajweed(0);
+      setVoice(0);
+      setDressing(0);
+    }
+  }, [existingScore, selectedParticipant]);
+
   const selectedPart = participants?.find((p) => p.id === selectedParticipant);
   const category = selectedPart?.categories;
   const maxMemo = category?.max_memorization ?? 20;
   const deduction = tadCount * 0.5 + tilCount * 2;
   const totalMistakes = tadCount + tilCount;
-  const memScore = calculateMemorizationScore(maxMemo, deduction);
+  const memScore = Math.max(0, maxMemo - deduction);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -177,15 +195,18 @@ const Scoring = () => {
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="space-y-2">
                   <Label>Tajweed (Max: {category.max_tajweed})</Label>
-                  <Input type="number" min={0} max={category.max_tajweed} value={tajweed} onChange={(e) => setTajweed(+e.target.value)} />
+                  <Input type="number" min={0} max={category.max_tajweed} value={tajweed}
+                    onChange={(e) => setTajweed(clamp(+e.target.value, 0, category.max_tajweed))} />
                 </div>
                 <div className="space-y-2">
                   <Label>Voice (Max: {category.max_voice})</Label>
-                  <Input type="number" min={0} max={category.max_voice} value={voice} onChange={(e) => setVoice(+e.target.value)} />
+                  <Input type="number" min={0} max={category.max_voice} value={voice}
+                    onChange={(e) => setVoice(clamp(+e.target.value, 0, category.max_voice))} />
                 </div>
                 <div className="space-y-2">
                   <Label>Dressing (Max: {category.max_dressing})</Label>
-                  <Input type="number" min={0} max={category.max_dressing} value={dressing} onChange={(e) => setDressing(+e.target.value)} />
+                  <Input type="number" min={0} max={category.max_dressing} value={dressing}
+                    onChange={(e) => setDressing(clamp(+e.target.value, 0, category.max_dressing))} />
                 </div>
               </div>
 
