@@ -86,38 +86,23 @@ const Judges = () => {
     },
   });
 
-  // ✅ CREATE JUDGE
+  // ✅ CREATE JUDGE (server-side — does not affect admin's session)
   const createJudgeMutation = useMutation({
     mutationFn: async () => {
-      const { data: authData, error: authError } =
-        await supabase.auth.signUp({
+      const { data, error } = await supabase.functions.invoke("create-judge", {
+        body: {
           email: form.email,
           password: form.password,
-          options: { data: { full_name: form.full_name } },
-        });
+          full_name: form.full_name,
+        },
+      });
 
-      if (authError) {
-        console.error("Auth error:", authError);
-        throw authError;
+      if (error) {
+        console.error("create-judge error:", error);
+        throw new Error(error.message || "Failed to create judge");
       }
-      
-      if (!authData?.user) {
-        throw new Error("User creation failed - no user data returned");
-      }
-
-      // wait for profile trigger
-      await new Promise((res) => setTimeout(res, 2000));
-
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .insert({
-          user_id: authData.user.id,
-          role: "judge",
-        });
-
-      if (roleError) {
-        console.error("Role insert error:", roleError);
-        throw roleError;
+      if (data?.error) {
+        throw new Error(data.error);
       }
     },
 
@@ -126,7 +111,10 @@ const Judges = () => {
       setOpen(false);
       setForm({ email: "", password: "", full_name: "" });
 
-      toast({ title: "Judge added successfully" });
+      toast({
+        title: "Judge created",
+        description: "Share the login credentials with them.",
+      });
     },
 
     onError: (err: unknown) => {
