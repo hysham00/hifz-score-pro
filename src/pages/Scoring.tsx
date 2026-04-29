@@ -14,10 +14,6 @@ import { Award, Minus } from "lucide-react";
 const clamp = (n: number, min: number, max: number) =>
   Math.min(max, Math.max(min, isNaN(n) ? 0 : n));
 
-function calculateMemorizationScore(maxMarks: number, deduction: number): number {
-  return Math.max(0, maxMarks - deduction);
-}
-
 const Scoring = () => {
   const { user } = useAuth();
   const { toast } = useToast();
