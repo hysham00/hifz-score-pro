@@ -36,10 +36,12 @@ const Dashboard = () => {
     <div className="animate-fade-in space-y-6">
       <div>
         <h1 className="font-heading text-2xl font-bold">
-          {role === "admin" ? "Admin Dashboard" : "Judge Dashboard"}
+          {role === "admin" ? "Coordinator Dashboard" : "Judge Dashboard"}
         </h1>
         <p className="text-muted-foreground">
-          Welcome to the Musabaqa Competition Management System
+          {role === "admin"
+            ? "Manage categories, participants, judges, and view results."
+            : "Score your assigned participants and view results."}
         </p>
       </div>
 
