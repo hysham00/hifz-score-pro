@@ -111,20 +111,9 @@ const Login = () => {
               </Button>
             </form>
 
-            <div className="mt-6 space-y-3 text-sm">
-              <div className="rounded-md border border-border bg-muted/40 p-3">
-                <p className="font-medium text-foreground">Coordinator (Admin) credentials</p>
-                <p className="mt-1 text-muted-foreground">
-                  Email: <span className="font-mono">{ADMIN_EMAIL}</span>
-                </p>
-                <p className="text-muted-foreground">
-                  Password: <span className="font-mono">{ADMIN_PASSWORD}</span>
-                </p>
-              </div>
-              <p className="text-center text-muted-foreground">
-                Judges: use the credentials provided by your coordinator.
-              </p>
-            </div>
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              Judges: use the credentials provided by your coordinator.
+            </p>
           </CardContent>
         </Card>
       </div>

@@ -11,13 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Award, Minus } from "lucide-react";
 
-function calculateMemorizationScore(maxMarks: number, mistakes: number): number {
-  let deduction = 0;
-  for (let i = 1; i <= mistakes; i++) {
-    if (i === 1) deduction += 0.5;
-    else if (i === 2) deduction += 1;
-    else deduction += 2;
-  }
+function calculateMemorizationScore(maxMarks: number, deduction: number): number {
   return Math.max(0, maxMarks - deduction);
 }
 
@@ -27,7 +21,8 @@ const Scoring = () => {
   const qc = useQueryClient();
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedParticipant, setSelectedParticipant] = useState<string>("");
-  const [mistakes, setMistakes] = useState(0);
+  const [tadCount, setTadCount] = useState(0);
+  const [tilCount, setTilCount] = useState(0);
   const [tajweed, setTajweed] = useState(0);
   const [voice, setVoice] = useState(0);
   const [dressing, setDressing] = useState(0);
@@ -68,7 +63,9 @@ const Scoring = () => {
   const selectedPart = participants?.find((p) => p.id === selectedParticipant);
   const category = selectedPart?.categories;
   const maxMemo = category?.max_memorization ?? 20;
-  const memScore = calculateMemorizationScore(maxMemo, mistakes);
+  const deduction = tadCount * 0.5 + tilCount * 2;
+  const totalMistakes = tadCount + tilCount;
+  const memScore = calculateMemorizationScore(maxMemo, deduction);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -77,7 +74,7 @@ const Scoring = () => {
       const payload = {
         participant_id: selectedParticipant,
         judge_id: user.id,
-        memorization_mistakes: mistakes,
+        memorization_mistakes: totalMistakes,
         memorization_score: memScore,
         tajweed_score: tajweed,
         voice_score: voice,
@@ -150,14 +147,30 @@ const Scoring = () => {
                   <Label className="text-base font-semibold">Memorization (Max: {maxMemo})</Label>
                   <span className="font-heading text-2xl font-bold text-accent">{memScore}</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Label>Mistakes:</Label>
-                  <Button type="button" variant="outline" size="icon" onClick={() => setMistakes(Math.max(0, mistakes - 1))}><Minus className="h-4 w-4" /></Button>
-                  <span className="w-12 text-center font-heading text-xl font-bold">{mistakes}</span>
-                  <Button type="button" variant="outline" size="icon" onClick={() => setMistakes(mistakes + 1)}>+</Button>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-md border p-3">
+                    <div className="mb-2 flex items-center justify-between">
+                      <Label className="font-semibold">TAD <span className="text-xs font-normal text-muted-foreground">(-0.5)</span></Label>
+                      <span className="font-heading text-lg font-bold">{tadCount}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button type="button" variant="outline" size="sm" className="flex-1" onClick={() => setTadCount(tadCount + 1)}>+ TAD</Button>
+                      <Button type="button" variant="ghost" size="icon" onClick={() => setTadCount(Math.max(0, tadCount - 1))}><Minus className="h-4 w-4" /></Button>
+                    </div>
+                  </div>
+                  <div className="rounded-md border p-3">
+                    <div className="mb-2 flex items-center justify-between">
+                      <Label className="font-semibold">TIL <span className="text-xs font-normal text-muted-foreground">(-2)</span></Label>
+                      <span className="font-heading text-lg font-bold">{tilCount}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button type="button" variant="outline" size="sm" className="flex-1" onClick={() => setTilCount(tilCount + 1)}>+ TIL</Button>
+                      <Button type="button" variant="ghost" size="icon" onClick={() => setTilCount(Math.max(0, tilCount - 1))}><Minus className="h-4 w-4" /></Button>
+                    </div>
+                  </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Deductions: 1st = -0.5, 2nd = -1, 3rd+ = -2 each
+                  Total deduction: −{deduction} ({tadCount} TAD + {tilCount} TIL)
                 </p>
               </div>
 
