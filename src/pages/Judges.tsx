@@ -50,26 +50,34 @@ const Judges = () => {
   } = useQuery<Judge[]>({
     queryKey: ["judges"],
     queryFn: async () => {
+      // First get user_ids from user_roles table
       const { data: roleData, error: roleError } = await supabase
         .from("user_roles")
         .select("user_id")
         .eq("role", "judge");
 
-      if (roleError) throw roleError;
+      if (roleError) {
+        console.error("Error fetching user_roles:", roleError);
+        return [];
+      }
 
-      if (!roleData || roleData.length === 0) return [];
+      if (!roleData || roleData.length === 0) {
+        return [];
+      }
 
       const userIds = roleData.map((r) => r.user_id);
 
+      // Then get profiles for those user_ids
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("user_id, full_name")
         .in("user_id", userIds);
 
       if (profileError) {
-        console.error(profileError);
+        console.error("Error fetching profiles:", profileError);
       }
 
+      // Combine the data
       return roleData.map((r) => ({
         user_id: r.user_id,
         profiles:
@@ -88,11 +96,17 @@ const Judges = () => {
           options: { data: { full_name: form.full_name } },
         });
 
-      if (authError) throw authError;
-      if (!authData?.user) throw new Error("User creation failed");
+      if (authError) {
+        console.error("Auth error:", authError);
+        throw authError;
+      }
+      
+      if (!authData?.user) {
+        throw new Error("User creation failed - no user data returned");
+      }
 
       // wait for profile trigger
-      await new Promise((res) => setTimeout(res, 1000));
+      await new Promise((res) => setTimeout(res, 2000));
 
       const { error: roleError } = await supabase
         .from("user_roles")
@@ -101,7 +115,10 @@ const Judges = () => {
           role: "judge",
         });
 
-      if (roleError) throw roleError;
+      if (roleError) {
+        console.error("Role insert error:", roleError);
+        throw roleError;
+      }
     },
 
     onSuccess: () => {
@@ -136,7 +153,7 @@ const Judges = () => {
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={refetch}>
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
             Refresh
           </Button>
 
@@ -248,7 +265,7 @@ const Judges = () => {
                         ? error.message
                         : "Unknown error"}
                     </div>
-                    <Button size="sm" onClick={refetch}>
+                      <Button size="sm" onClick={() => refetch()}>
                       Retry
                     </Button>
                   </TableCell>
