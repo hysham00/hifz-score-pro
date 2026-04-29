@@ -63,12 +63,31 @@ const Scoring = () => {
     enabled: !!selectedParticipant && !!user,
   });
 
+  // Load existing score values when a participant is selected / score loads
+  useEffect(() => {
+    if (existingScore) {
+      const mistakes = existingScore.memorization_mistakes ?? 0;
+      // Best-effort split: prefer keeping all as TAD (smaller deductions); judge can adjust
+      setTadCount(mistakes);
+      setTilCount(0);
+      setTajweed(Number(existingScore.tajweed_score) || 0);
+      setVoice(Number(existingScore.voice_score) || 0);
+      setDressing(Number(existingScore.dressing_score) || 0);
+    } else {
+      setTadCount(0);
+      setTilCount(0);
+      setTajweed(0);
+      setVoice(0);
+      setDressing(0);
+    }
+  }, [existingScore, selectedParticipant]);
+
   const selectedPart = participants?.find((p) => p.id === selectedParticipant);
   const category = selectedPart?.categories;
   const maxMemo = category?.max_memorization ?? 20;
   const deduction = tadCount * 0.5 + tilCount * 2;
   const totalMistakes = tadCount + tilCount;
-  const memScore = calculateMemorizationScore(maxMemo, deduction);
+  const memScore = Math.max(0, maxMemo - deduction);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
