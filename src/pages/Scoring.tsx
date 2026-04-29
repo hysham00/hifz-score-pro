@@ -11,13 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Award, Minus } from "lucide-react";
 
-function calculateMemorizationScore(maxMarks: number, mistakes: number): number {
-  let deduction = 0;
-  for (let i = 1; i <= mistakes; i++) {
-    if (i === 1) deduction += 0.5;
-    else if (i === 2) deduction += 1;
-    else deduction += 2;
-  }
+function calculateMemorizationScore(maxMarks: number, deduction: number): number {
   return Math.max(0, maxMarks - deduction);
 }
 
