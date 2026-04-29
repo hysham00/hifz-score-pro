@@ -195,15 +195,18 @@ const Scoring = () => {
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="space-y-2">
                   <Label>Tajweed (Max: {category.max_tajweed})</Label>
-                  <Input type="number" min={0} max={category.max_tajweed} value={tajweed} onChange={(e) => setTajweed(+e.target.value)} />
+                  <Input type="number" min={0} max={category.max_tajweed} value={tajweed}
+                    onChange={(e) => setTajweed(clamp(+e.target.value, 0, category.max_tajweed))} />
                 </div>
                 <div className="space-y-2">
                   <Label>Voice (Max: {category.max_voice})</Label>
-                  <Input type="number" min={0} max={category.max_voice} value={voice} onChange={(e) => setVoice(+e.target.value)} />
+                  <Input type="number" min={0} max={category.max_voice} value={voice}
+                    onChange={(e) => setVoice(clamp(+e.target.value, 0, category.max_voice))} />
                 </div>
                 <div className="space-y-2">
                   <Label>Dressing (Max: {category.max_dressing})</Label>
-                  <Input type="number" min={0} max={category.max_dressing} value={dressing} onChange={(e) => setDressing(+e.target.value)} />
+                  <Input type="number" min={0} max={category.max_dressing} value={dressing}
+                    onChange={(e) => setDressing(clamp(+e.target.value, 0, category.max_dressing))} />
                 </div>
               </div>
 
