@@ -63,7 +63,9 @@ const Scoring = () => {
   const selectedPart = participants?.find((p) => p.id === selectedParticipant);
   const category = selectedPart?.categories;
   const maxMemo = category?.max_memorization ?? 20;
-  const memScore = calculateMemorizationScore(maxMemo, mistakes);
+  const deduction = tadCount * 0.5 + tilCount * 2;
+  const totalMistakes = tadCount + tilCount;
+  const memScore = calculateMemorizationScore(maxMemo, deduction);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -72,7 +74,7 @@ const Scoring = () => {
       const payload = {
         participant_id: selectedParticipant,
         judge_id: user.id,
-        memorization_mistakes: mistakes,
+        memorization_mistakes: totalMistakes,
         memorization_score: memScore,
         tajweed_score: tajweed,
         voice_score: voice,
