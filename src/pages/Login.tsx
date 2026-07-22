@@ -21,7 +21,8 @@ const Login = () => {
     setIsLoading(true);
     try {
       await signIn(email, password);
-      navigate("/dashboard");
+      const next = new URLSearchParams(window.location.search).get("next");
+      navigate(next && next.startsWith("/") ? next : "/dashboard");
     } catch (error: any) {
       toast({
         title: "Login failed",
