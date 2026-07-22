@@ -13,6 +13,7 @@ import Scoring from "./pages/Scoring";
 import Results from "./pages/Results";
 import DashboardLayout from "./components/DashboardLayout";
 import NotFound from "./pages/NotFound";
+import OAuthConsent from "./pages/OAuthConsent";
 
 const queryClient = new QueryClient();
 
@@ -44,7 +45,11 @@ function AuthRedirect() {
       </div>
     );
   }
-  if (user) return <Navigate to="/dashboard" replace />;
+  if (user) {
+    const next = new URLSearchParams(window.location.search).get("next");
+    if (next && next.startsWith("/")) return <Navigate to={next} replace />;
+    return <Navigate to="/dashboard" replace />;
+  }
   return <Login />;
 }
 
@@ -56,6 +61,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
+            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route path="/" element={<AuthRedirect />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/dashboard/categories" element={<ProtectedRoute allowedRoles={["admin"]}><Categories /></ProtectedRoute>} />

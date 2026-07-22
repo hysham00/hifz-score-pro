@@ -1,0 +1,145 @@
+{
+  "version": 1,
+  "sdk_version": "0.24.0",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://eouuztdfdsiubhzaxdjj.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "musabaqa-mcp",
+      "version": "0.1.0",
+      "title": "Musabaqa MCP"
+    },
+    "tools": [
+      {
+        "name": "list_categories",
+        "title": "List categories",
+        "description": "List all Musabaqa competition categories with their max scores.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_participants",
+        "title": "List participants",
+        "description": "List participants, optionally filtered by category id.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "category_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Optional category id filter"
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_results",
+        "title": "Get results and rankings",
+        "description": "Compute average total scores per participant, optionally filtered by category, ranked highest first.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "category_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Optional category id filter"
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_my_scores",
+        "title": "List my submitted scores",
+        "description": "List all scores submitted by the currently signed-in judge.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "submit_score",
+        "title": "Submit a score",
+        "description": "Submit or update the signed-in judge's score for a participant. total_score = memorization + tajweed + voice + dressing.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "participant_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "memorization_score": {
+              "type": "number",
+              "minimum": 0
+            },
+            "memorization_mistakes": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            },
+            "tajweed_score": {
+              "type": "number",
+              "minimum": 0
+            },
+            "voice_score": {
+              "type": "number",
+              "minimum": 0
+            },
+            "dressing_score": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "participant_id",
+            "memorization_score",
+            "tajweed_score",
+            "voice_score",
+            "dressing_score"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
