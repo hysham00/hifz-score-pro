@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-type AppRole = "admin" | "judge";
+type AppRole = "admin" | "judge" | "coordinator";
 
 interface AuthContextType {
   session: Session | null;
@@ -37,7 +37,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
+        if (event === "TOKEN_REFRESHED" && !session) {
+          // Stale refresh token — clear it so the user can sign in again
+          supabase.auth.signOut({ scope: "local" }).catch(() => {});
+        }
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
@@ -66,8 +70,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    const attempt = () =>
+      supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+
+    let result;
+    try {
+      result = await attempt();
+    } catch (e) {
+      // Network hiccup or stale local session — clear and retry once
+      await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+      result = await attempt();
+    }
+    if (result.error) throw result.error;
   };
 
   const signOut = async () => {

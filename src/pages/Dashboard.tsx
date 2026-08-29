@@ -36,12 +36,18 @@ const Dashboard = () => {
     <div className="animate-fade-in space-y-6">
       <div>
         <h1 className="font-heading text-2xl font-bold">
-          {role === "admin" ? "Coordinator Dashboard" : "Judge Dashboard"}
+          {role === "admin"
+            ? "Coordinator Dashboard"
+            : role === "coordinator"
+              ? "National Coordinator Dashboard"
+              : "Judge Dashboard"}
         </h1>
         <p className="text-muted-foreground">
           {role === "admin"
             ? "Manage categories, participants, judges, and view results."
-            : "Score your assigned participants and view results."}
+            : role === "coordinator"
+              ? "View the official results of the competition."
+              : "Score your assigned participants and view results."}
         </p>
       </div>
 

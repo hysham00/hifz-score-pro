@@ -21,11 +21,17 @@ const judgeLinks = [
   { to: "/dashboard/results", label: "Results", icon: Award },
 ];
 
+const coordinatorLinks = [
+  { to: "/dashboard", label: "Dashboard", icon: BarChart3 },
+  { to: "/dashboard/results", label: "Results", icon: Award },
+];
+
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { role, signOut, user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const links = role === "admin" ? adminLinks : judgeLinks;
+  const links =
+    role === "admin" ? adminLinks : role === "coordinator" ? coordinatorLinks : judgeLinks;
 
   const handleSignOut = async () => {
     await signOut();
@@ -42,7 +48,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
           <div>
             <h2 className="font-heading text-lg font-semibold">Musabaqa</h2>
-            <p className="text-xs capitalize text-sidebar-foreground/60">{role} Panel</p>
+            <p className="text-xs capitalize text-sidebar-foreground/60">
+              {role === "coordinator" ? "National Coordinator" : `${role} Panel`}
+            </p>
           </div>
         </div>
 

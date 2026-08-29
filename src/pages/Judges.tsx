@@ -38,6 +38,7 @@ type Judge = {
   user_id: string;
   profiles: {
     full_name: string;
+    judge_code: string | null;
   } | null;
 };
 
@@ -81,7 +82,7 @@ const Judges = () => {
       // Then get profiles for those user_ids
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("user_id, full_name")
+        .select("user_id, full_name, judge_code")
         .in("user_id", userIds);
 
       if (profileError) {
@@ -266,7 +267,7 @@ const Judges = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>User ID</TableHead>
+                <TableHead>Judge ID</TableHead>
                 <TableHead className="w-24 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -304,8 +305,8 @@ const Judges = () => {
                     <TableCell>
                       {j.profiles?.full_name || "—"}
                     </TableCell>
-                    <TableCell className="text-xs">
-                      {j.user_id}
+                    <TableCell className="font-mono text-xs">
+                      {j.profiles?.judge_code || "—"}
                     </TableCell>
                     <TableCell className="text-right">
                       <AlertDialog>
