@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -104,6 +104,19 @@ const Participants = () => {
     setOpen(true);
   };
 
+  // Organize participants into category groups instead of one flat list
+  const grouped = (() => {
+    const map = new Map<string, { id: string; name: string; rows: any[] }>();
+    (categories ?? []).forEach((c: any) => map.set(c.id, { id: c.id, name: c.name, rows: [] }));
+    map.set("__none", { id: "__none", name: "Uncategorized", rows: [] });
+    (participants ?? []).forEach((p: any) => {
+      const key = p.category_id && map.has(p.category_id) ? p.category_id : "__none";
+      map.get(key)!.rows.push(p);
+    });
+    return Array.from(map.values()).filter((g) => g.rows.length > 0);
+  })();
+
+
   return (
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
@@ -147,16 +160,15 @@ const Participants = () => {
                 <Label>Address</Label>
                 <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Street / town" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>LGA</Label>
-                  <Input value={form.lga} onChange={(e) => setForm({ ...form, lga: e.target.value })} placeholder="Local Government Area" />
-                </div>
-                <div className="space-y-2">
-                  <Label>State</Label>
-                  <Input value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} placeholder="State" />
-                </div>
+              <div className="space-y-2">
+                <Label>LGA (Local Government Area)</Label>
+                <Input value={form.lga} onChange={(e) => setForm({ ...form, lga: e.target.value })} placeholder="e.g. Fagge" />
               </div>
+              <div className="space-y-2">
+                <Label>State</Label>
+                <Input value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} placeholder="e.g. Kano" />
+              </div>
+
               <Button type="submit" className="w-full" disabled={saveMutation.isPending}>
                 {saveMutation.isPending ? "Saving..." : "Save"}
               </Button>
@@ -165,46 +177,55 @@ const Participants = () => {
         </Dialog>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Date of Birth</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>School</TableHead>
-                <TableHead>LGA / State</TableHead>
-                <TableHead className="w-24">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
-              ) : participants?.length === 0 ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No participants yet</TableCell></TableRow>
-              ) : participants?.map((p: any) => (
-                <TableRow key={p.id}>
-                  <TableCell className="font-medium">{p.full_name}</TableCell>
-                  <TableCell>{p.date_of_birth || "—"}</TableCell>
-                  <TableCell>{p.categories?.name || "—"}</TableCell>
-                  <TableCell>
-                    <div>{p.school || "—"}</div>
-                    {p.address && <div className="text-xs text-muted-foreground">{p.address}</div>}
-                  </TableCell>
-                  <TableCell>{[p.lga, p.state].filter(Boolean).join(", ") || "—"}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => startEdit(p)}><Pencil className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {isLoading ? (
+        <Card><CardContent className="py-8 text-center text-muted-foreground">Loading...</CardContent></Card>
+      ) : (participants?.length ?? 0) === 0 ? (
+        <Card><CardContent className="py-8 text-center text-muted-foreground">No participants yet</CardContent></Card>
+      ) : (
+        grouped.map((group) => (
+          <Card key={group.id}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <CardTitle className="font-heading text-lg">{group.name}</CardTitle>
+              <span className="text-sm text-muted-foreground">{group.rows.length} participant{group.rows.length === 1 ? "" : "s"}</span>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Date of Birth</TableHead>
+                    <TableHead>School</TableHead>
+                    <TableHead>LGA</TableHead>
+                    <TableHead>State</TableHead>
+                    <TableHead className="w-24">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {group.rows.map((p: any) => (
+                    <TableRow key={p.id}>
+                      <TableCell className="font-medium">{p.full_name}</TableCell>
+                      <TableCell>{p.date_of_birth || "—"}</TableCell>
+                      <TableCell>
+                        <div>{p.school || "—"}</div>
+                        {p.address && <div className="text-xs text-muted-foreground">{p.address}</div>}
+                      </TableCell>
+                      <TableCell>{p.lga || "—"}</TableCell>
+                      <TableCell>{p.state || "—"}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => startEdit(p)}><Pencil className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        ))
+      )}
+
     </div>
   );
 };
