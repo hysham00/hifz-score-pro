@@ -147,16 +147,15 @@ const Participants = () => {
                 <Label>Address</Label>
                 <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Street / town" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>LGA</Label>
-                  <Input value={form.lga} onChange={(e) => setForm({ ...form, lga: e.target.value })} placeholder="Local Government Area" />
-                </div>
-                <div className="space-y-2">
-                  <Label>State</Label>
-                  <Input value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} placeholder="State" />
-                </div>
+              <div className="space-y-2">
+                <Label>LGA (Local Government Area)</Label>
+                <Input value={form.lga} onChange={(e) => setForm({ ...form, lga: e.target.value })} placeholder="e.g. Fagge" />
               </div>
+              <div className="space-y-2">
+                <Label>State</Label>
+                <Input value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} placeholder="e.g. Kano" />
+              </div>
+
               <Button type="submit" className="w-full" disabled={saveMutation.isPending}>
                 {saveMutation.isPending ? "Saving..." : "Save"}
               </Button>
