@@ -49,27 +49,39 @@ export type Database = {
       }
       participants: {
         Row: {
+          address: string | null
           category_id: string | null
           created_at: string
           date_of_birth: string | null
           full_name: string
           id: string
+          lga: string | null
+          school: string | null
+          state: string | null
           updated_at: string
         }
         Insert: {
+          address?: string | null
           category_id?: string | null
           created_at?: string
           date_of_birth?: string | null
           full_name: string
           id?: string
+          lga?: string | null
+          school?: string | null
+          state?: string | null
           updated_at?: string
         }
         Update: {
+          address?: string | null
           category_id?: string | null
           created_at?: string
           date_of_birth?: string | null
           full_name?: string
           id?: string
+          lga?: string | null
+          school?: string | null
+          state?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -87,18 +99,21 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          judge_code: string | null
           user_id: string
         }
         Insert: {
           created_at?: string
           full_name?: string | null
           id?: string
+          judge_code?: string | null
           user_id: string
         }
         Update: {
           created_at?: string
           full_name?: string | null
           id?: string
+          judge_code?: string | null
           user_id?: string
         }
         Relationships: []
@@ -183,9 +198,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      next_judge_code: { Args: never; Returns: string }
     }
     Enums: {
-      app_role: "admin" | "judge"
+      app_role: "admin" | "judge" | "coordinator"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -313,7 +329,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "judge"],
+      app_role: ["admin", "judge", "coordinator"],
     },
   },
 } as const
