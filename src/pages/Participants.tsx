@@ -104,6 +104,19 @@ const Participants = () => {
     setOpen(true);
   };
 
+  // Organize participants into category groups instead of one flat list
+  const grouped = (() => {
+    const map = new Map<string, { id: string; name: string; rows: any[] }>();
+    (categories ?? []).forEach((c: any) => map.set(c.id, { id: c.id, name: c.name, rows: [] }));
+    map.set("__none", { id: "__none", name: "Uncategorized", rows: [] });
+    (participants ?? []).forEach((p: any) => {
+      const key = p.category_id && map.has(p.category_id) ? p.category_id : "__none";
+      map.get(key)!.rows.push(p);
+    });
+    return Array.from(map.values()).filter((g) => g.rows.length > 0);
+  })();
+
+
   return (
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
