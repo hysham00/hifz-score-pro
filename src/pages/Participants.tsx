@@ -14,7 +14,15 @@ import { Plus, Trash2, Pencil } from "lucide-react";
 const Participants = () => {
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState({ full_name: "", date_of_birth: "", category_id: "" });
+  const [form, setForm] = useState({
+    full_name: "",
+    date_of_birth: "",
+    category_id: "",
+    school: "",
+    address: "",
+    lga: "",
+    state: "",
+  });
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -44,6 +52,10 @@ const Participants = () => {
         full_name: form.full_name,
         date_of_birth: form.date_of_birth || null,
         category_id: form.category_id || null,
+        school: form.school.trim() || null,
+        address: form.address.trim() || null,
+        lga: form.lga.trim() || null,
+        state: form.state.trim() || null,
       };
       if (editId) {
         const { error } = await supabase.from("participants").update(payload).eq("id", editId);
@@ -75,7 +87,7 @@ const Participants = () => {
 
   const resetForm = () => {
     setEditId(null);
-    setForm({ full_name: "", date_of_birth: "", category_id: "" });
+    setForm({ full_name: "", date_of_birth: "", category_id: "", school: "", address: "", lga: "", state: "" });
   };
 
   const startEdit = (p: any) => {
@@ -84,6 +96,10 @@ const Participants = () => {
       full_name: p.full_name,
       date_of_birth: p.date_of_birth || "",
       category_id: p.category_id || "",
+      school: p.school || "",
+      address: p.address || "",
+      lga: p.lga || "",
+      state: p.state || "",
     });
     setOpen(true);
   };
@@ -99,7 +115,7 @@ const Participants = () => {
           <DialogTrigger asChild>
             <Button><Plus className="mr-2 h-4 w-4" />Add Participant</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-heading">{editId ? "Edit" : "Add"} Participant</DialogTitle>
             </DialogHeader>
@@ -123,6 +139,24 @@ const Participants = () => {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2">
+                <Label>School</Label>
+                <Input value={form.school} onChange={(e) => setForm({ ...form, school: e.target.value })} placeholder="e.g. Darul Qur'an Academy" />
+              </div>
+              <div className="space-y-2">
+                <Label>Address</Label>
+                <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Street / town" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>LGA</Label>
+                  <Input value={form.lga} onChange={(e) => setForm({ ...form, lga: e.target.value })} placeholder="Local Government Area" />
+                </div>
+                <div className="space-y-2">
+                  <Label>State</Label>
+                  <Input value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} placeholder="State" />
+                </div>
+              </div>
               <Button type="submit" className="w-full" disabled={saveMutation.isPending}>
                 {saveMutation.isPending ? "Saving..." : "Save"}
               </Button>
@@ -139,19 +173,26 @@ const Participants = () => {
                 <TableHead>Name</TableHead>
                 <TableHead>Date of Birth</TableHead>
                 <TableHead>Category</TableHead>
+                <TableHead>School</TableHead>
+                <TableHead>LGA / State</TableHead>
                 <TableHead className="w-24">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
               ) : participants?.length === 0 ? (
-                <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground">No participants yet</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No participants yet</TableCell></TableRow>
               ) : participants?.map((p: any) => (
                 <TableRow key={p.id}>
                   <TableCell className="font-medium">{p.full_name}</TableCell>
                   <TableCell>{p.date_of_birth || "—"}</TableCell>
                   <TableCell>{p.categories?.name || "—"}</TableCell>
+                  <TableCell>
+                    <div>{p.school || "—"}</div>
+                    {p.address && <div className="text-xs text-muted-foreground">{p.address}</div>}
+                  </TableCell>
+                  <TableCell>{[p.lga, p.state].filter(Boolean).join(", ") || "—"}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
                       <Button variant="ghost" size="icon" onClick={() => startEdit(p)}><Pencil className="h-4 w-4" /></Button>
