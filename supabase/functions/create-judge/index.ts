@@ -67,10 +67,16 @@ Deno.serve(async (req) => {
 
     const newUserId = created.user.id;
 
+    // Generate a readable judge code (JUDGE001, JUDGE002, ...)
+    const { data: judgeCode } = await admin.rpc("next_judge_code");
+
     // Profile is auto-created by handle_new_user trigger if present; ensure it exists
     await admin
       .from("profiles")
-      .upsert({ user_id: newUserId, full_name }, { onConflict: "user_id" });
+      .upsert(
+        { user_id: newUserId, full_name, judge_code: judgeCode },
+        { onConflict: "user_id" },
+      );
 
     const { error: roleInsertErr } = await admin
       .from("user_roles")
@@ -81,7 +87,7 @@ Deno.serve(async (req) => {
       return json({ error: roleInsertErr.message }, 400);
     }
 
-    return json({ user_id: newUserId, email }, 200);
+    return json({ user_id: newUserId, email, judge_code: judgeCode }, 200);
   } catch (e) {
     return json({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
   }
